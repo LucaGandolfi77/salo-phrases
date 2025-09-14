@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Cose di cui non mi frega niente - Salo Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            color: #00ff00;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Green stripes background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                #00ff0020 10px,
+                #00ff0020 20px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 40px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff00;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .phrase-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .phrase-display {
+            font-size: 20px;
+            line-height: 1.4;
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 30px 20px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .phrase-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            z-index: 3;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #000000, #003300);
+            color: #00ff00;
+            border: 3px solid #00ff00;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .generate-btn:hover,
+        .generate-btn:active {
+            background: linear-gradient(45deg, #003300, #006600);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.8);
+            transform: scale(1.02);
+        }
+
+        .generate-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 255, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #00ff00;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .title {
+                font-size: 20px;
+            }
+            
+            .phrase-display {
+                font-size: 18px;
+                padding: 25px 15px;
+            }
+            
+            .generate-btn {
+                font-size: 16px;
+                padding: 16px;
+            }
+        }
+
+        @media (max-height: 667px) {
+            .container {
+                padding-top: 10px;
+                padding-bottom: 100px;
+            }
+            
+            .header {
+                padding-top: 20px;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">Cose di cui non mi frega niente</div>
+            <div class="subtitle">Salo Edition</div>
+        </div>
+        
+        <div class="phrase-container">
+            <div class="phrase-display" id="phraseDisplay">
+                Premi il pulsante per generare una frase casuale
+            </div>
+        </div>
+    </div>
+    
+    <div class="button-container">
+        <button class="generate-btn" id="generateBtn" onclick="generatePhrase()">
+            Genera Frase
+        </button>
+    </div>
+
+    <script>
+        // Placeholder phrases - you can replace this array with your own list
+        const phrases = [
+            "Miso prende un primo (forse)",
+"Il salso ha proposto a compio di giocare",
+"La linda ha sognato fede gotri che le scoppiava i brufoli",
+"Sto sul cazzo alla klaudia",
+"La martina ha mangiato un bombolone fritto al cioccolato",
+"La martina stava per essere arrestata con suo padre ",
+"Compio è leggermente africano",
+"Samu 💞 (la marti le da il culo) ha mangiato merluzzo con pomodorini",
+"La francia ha fatto una petizione per rigiocare contro la svizzera ",
+"Giacomo ha preso l’aspirapolvere nuovo e l’ha provato in casa, pulendo molto bene ",
+"Sebastian matarrese è andato alla fascion uik da modello",
+"Devo prendere un letto gonfiabile",
+"La chiara non sa se togliersi la giacca perché non sa se ha caldo o freddo",
+"Lele blade ha 1.200.000 ascoltatori mensili (detto da moro)",
+"Samu domani manda un pito di resina e non lo passa a i più grandi tifosi della storia della tifoseria (AMALA 💙🖤)",
+"La nives si fa una carbonara",
+"La prima serata del colle è quando cade lo stato di emergenza (grazie salo)",
+"La nives forse domani viene all’italghisa",
+"Compio ha voglia di guzzare",
+"Al mondo ci sono solo 4 forme di nugget",
+"Compio ha aggiornato la playlist",
+"La giada ha un burrocacao blu",
+"Il signore sopra zalaffi deve dormire",
+"La martina ha patito un freddo della madonna (poverina)",
+"La klaudia stava piangendo fuori dal colle",
+"La cigno non mi perdona ",
+"La giulia ha chiuso prima a piripicchio",
+"La nives ha dimenticato il caricatore a casa della michol",
+"Zane mi dice di smetterla",
+"Alla martina non piace bukowski",
+"Alla nives non piace la camicia di mio papà",
+"La nives è bellissima (se l’è aggiunta da sola, non sa niente, come sempre (ha perso il fumo (20€)))",
+"Negli ultimi giorni compio non ha toccato alcol (pasquetta)",
+"La nives ha beccato corbe ecc a sestri a ferragosto",
+"La cigno dice che sono esagerato (lo so 💁‍♂️💅🦆🐥)",
+"La nives ha un buco nello stomaco e sta canna sta peggiorando la situazione ",
+"Compio ha aperto anche lui una lista delle cose di cui non gliene frega un cazzo e sono il primo (no personalità)",
+"La chiara restava a salso solo per scopare londini",
+"Le amazzoni forse cambiano nome in winx",
+"Zelo sta andando a festeggiare",
+"Le amazz_oni fanno tavolo ",
+"Ho straiato qualcosa addosso alla cigno perché era in mezzo al cazzo",
+"Ho sputato in bocca alla nives",
+"La nives ha la ganja (che ha perso)",
+"Gerti tendenza ha vinto 300 euro",
+"Samu non ha più sbatti di stare al bar andré",
+"Ci sono i posti di blocco",
+"L’allenatrice di pallavolo della Martina si chiama Vignali Veronica",
+"Compio vuole andare dall’osteopata",
+"Quelli di fianco a noi sono sbirri (al vecchio parco)",
+"La martina sta segnando tutta la gente che le sta sul cazzo e io sono tra questi",
+"La giulia scopa vitto",
+"Compio domani all’alley oop porta tutto, TUTTO",
+"Se marzio sbocca sulla martina d, non va più a casa marzio",
+"Compio ha trombato",
+"La giada ha male alla schiena proprio qui",
+"Compio ha preso una piña colada e non ci sono le patatine con gli hamburger",
+"Viene shiva a imperia",
+"Ci svegliamo alle 10:30",
+"Qualcuno ha rotto la rete del padel al cabriolo (detto da papà mele)",
+"C’erano gli sbirri in lucciola (Moro Jr)",
+"La giada ha beccato il suo vicino di torino a radio (l’adelisa conferma, sti cazzi)",
+"La martina voleva i pantaloni lunghi per arrotolarseli",
+"Dario dege alle medie ha giocato a golf",
+"La dedde è una delle prime con l’iqos",
+"La martina doveva ascoltare il suo istinto",
+"Le vie di fidenza sono scritte in dialetto grazie alla nostra alternanza scuola lavoro",
+"Faccio cagare",
+"Corbe deve svegliarsi alle 8 am",
+"Alla giadina si sono sporcate le manine ",
+"Le unghie di prima spaccavano (Nives)",
+"Vitto deve prendere il tabacco (sti cazzi)",
+"L’ines ha fatto uno shottino di sonju liscio (lapa bla bla)",
+"La birra con la sprite si chiama panache",
+"Domani mighi va a comprare le alette piccantine",
+"Cana batte ogni giorno il suo record a tiger ball",
+"L’ines stava facendo la sua parte con ruben e marzio",
+"Questa lista ha 3 anni (detto da salo, che sono io) ora 4",
+"Domani marci ha la cera al campo (perché l’ha dimenticata venerdì)",
+"L’ines mi cancella (sti cazzi)",
+"Cana ha battuto il record a tiger ball (193)",
+"A marzio regalano gli accendini da morigoni (non è più morigoni dal 2018) mi ammazzo",
+"Porto di Gioia Tauro è il più grande d’europa",
+"È illegale giocare a carte in pubblico",
+"L’Ines ha detto che nei matrimoni in grecia spaccano tutto (woppa!)",
+"L’ines coniglietta ha perso un guanto",
+"Le ragazze sono in giro dalle 6",
+"L’ines si è addormentata alle 2:30 e si è svegliata alle 6",
+"Lo zio dell’inni abita sopra lo studio",
+"L’inni paga con la carta",
+"La michela deve andare al tendone perché deve beccare qualcuno",
+"La marti ha la schiena scoperta",
+"La nina ha la macchina dal mercato",
+"Se sei in cucina della dedde sei a salso, in camera da letto sei a fide ",
+"Domani leo va alla spa",
+"La giada ha perso l’iqos",
+"Ho fatto male alla nina",
+"La giada ha ritrovato l’iqos",
+"La giada ha un livido nel polpaccio",
+"La giada ha perso maschera di alice e non sa come dirglielo",
+"La nina ha bevuto come i nostri gin tonic",
+"L’ines va a prendere un flurry",
+"Ludo l’ha scoperto",
+"Leo si vuole comprare l’iqos",
+"L’ines ha il passaggio in macchina",
+"Luigi ha battuto il suo stesso record (10540)",
+"Tosco ha l’iluma",
+"La nina non ha toccato alcol",
+"L’inni ha le mani screpolate ",
+"Miguel se l’è fatta dopo ruben",
+"Amelia fumava le teak",
+"I miei amici hanno bagnato la dalla ❤️",
+"C’era la daniela coetesi",
+"La fabi vuole buttarmi su",
+"Pilot ha aperto gli avversari a clash royale",
+"La Michela sta piangendo",
+"Le nuove heets non lasciano schifo",
+"Siria si è offesa perché ho insultato Reggio Calabria",
+"La dedde si brucia meno i polmoni di me ",
+"Amelia ha 2 anni in più di me (non è vero)",
+"Dopo un po’ mighi si rompe i coglioni",
+"La cigno ha venduto i suoi occhiali da sole in bagno a 5 euro",
+"A fishball è cresciuta la pancia tutta insieme",
+"C’è qualcosa che vola - Martina scotti",
+"I singoli sono più belli dei feat - Nina Delucchi",
+"La dedde ha lavorato popo un botto questa settimana",
+"Mettere tipo un sacco di strisce di led addosso e far serata con elle - Gando ",
+"Mi piacciono proprio queste scale - Zelo",
+"All’Ines ne è venuta in mente una: gondola 🚣‍♂️",
+"Quella di luchè è meglio",
+"La doris mi ruba il posto auto",
+"La martina ha le croste nel naso (non per la cocaina)",
+"Abbiamo un’associazione degli studenti",
+"La marti ci mette pochissimo a prepararsi!",
+"La zia di Tosco ha un brand detto Riviera - Mamma 13 luglio 2023",
+"Le stanno facendo lo spritz ",
+"La dedde ha cambiato scarpe con l’ali😠🦥🥥",
+"Leo non ha il telefono (ce l’ha rubi)",
+"Domani la martina si sveglia con una caviglia così",
+"Vitto ha dimenticato caricabatterie e occhiali",
+"La martina vuole andare a casa",
+"La tanz ha fatto bologna lecce con l’aria condizionata",
+"La nina non andrebbe mai con uno con la scarpa a punta",
+"La martina ha il 4g",
+"La martina è ubriaca",
+"La giada ha perso l’iqos",
+"La Martina deve mettersi un cerotto",
+"C’era la Lulu - Tubo",
+"Jack deve ciapare",
+"Questo è il primo accendino che mi dura un po’. È anche il più bello - Sami",
+"La nina ha preso l’iqos nuova",
+"Leo mangia a casa a pranzo",
+"La nina sa saltare la corda e salto doppio incrociato ",
+"Potrebbe esserci la figlia di quella sotto casa mia - Marcelletti",
+"La nina è la seconda pi",
+"Ho spettinato la martina",
+"Secondo lui era la lucrezia allegri - Schettux",
+"Una volta una ha chiesto di scopare mio fratello - Nico Iannuz",
+"Mi hanno insegnato a dirigere - Spagna",
+"L’inni ha male ai talloni",
+"L’inni si doveva chiamare jacopo ",
+"La michela piange di me",
+"Non posso fumare le canne in traghetto",
+"Quest’uva è veramente buona - Ines",
+"È iniziata catania-foggia - graziano catania",
+"È un giorno che sbatto il gomito ovunque - Amelia",
+"Ieri ho mangiato una piadina con salmone rucola e philadelphia light - Flavio",
+"Sono diventata messinese - Amelia",
+"C’è una bionda che mi vuole fare in discoteca",
+"Mi fanno male i piedi - Klaudia",
+"Questa giacca da 350 euro deve stare sul tavolo -",
+"Borsa da 2800 deve stare sul tavolo",
+"La martina deve vomitare l’anima (MT)- fidenza 9/10/23 fidenza",
+"Samu non ha pantaloni neri",
+"Sono senza assicurazione ",
+"Nel primo arriverà una ragazza carina - Eros",
+"Siamo vicini a una chiesa (stavo bestemmiando) - Erotico",
+"Mettere tanto il cappello aumenta la predisposizione alla calvizia - Amelia",
+"Ha chiuso l’uromakeria - Franci Ross",
+"Ho tipo 13 anni in più di quelli dentro (Andromeda) - Franci Ross",
+"So sciare da quando sono nata- martina ",
+"Io sto studiando- Dedde",
+"Ho tagliato i capelli a un mio amico - Eros",
+"Miguel ha sonno ed è in pausa",
+"Ci siamo divertiti all’aperitivo - Amelia",
+"L’8 dicembre viene sfera a reggio calabria - Ciccio",
+"Si sono fidanzati - Mery",
+"In questo posto c’era Willy",
+"Miro ha picchiato un tipo",
+"La bobotv si è sciolta ",
+"Federico si è fatto la barba e stavano venendo giù tutti i santi in colonna",
+"Samu si è messo dietro e ha sboccato",
+"Ho fatto una scoreggia - Andrea Randisi",
+"Raffaele è emotivo e si prende 5 minutini di pausa dall’esame ",
+"Federica Marotta si è lasciata",
+"15 giugno vado a vedere Geolier - Federico Scordino",
+"Eros è a 1/4 di igiene",
+"La princi ha scaricato Threads ieri",
+"La nives è incazzata perché le hanno dato della puttana (niente di più vero)",
+"L’inni è sveglia dalle 8",
+"Sono sfigato perché non ho tiktok",
+"Devo andare a pisciare e qualcuno mi deve accompagnare perché è troppo grosso (semiiiiiiii)",
+"La Martina è zempre unricaav",
+"Questo tipo 28/12 ",
+"Le ragazze scendono da loro",
+"Alla giada sta uscendo un livido",
+"Vitto vuole un prosecchino",
+"La nina si è svegliate alle 8 (tutto maiuscolo)",
+"Cana si sveglia con un livido",
+"Questa serata",
+"Devo dei soldi a dario",
+"Twenty Seconds to Mars vengono in italia quest’estate 2024 - mamma",
+"Anna Dattolo si è fatta piercing capezzolo - Jan",
+"L’ale era a milano",
+"Quest’anno a san remo c’è il volo - Tony",
+"Il migliore amico di mary (con i capelli rossi) è in mare fuori",
+"C’è SanRemo",
+"Alessia Dalcielo a SanRemo",
+"Angelina Mango ha vinto sanremo",
+"Il Doc 4",
+"La Doris vuole sapere chi ha l’ombelico in fuori",
+"Prodilo tinder red flag 🚩- Bazza",
+"Alla Martina è tornata la cistite ",
+"Ci sono le ragazze - Ines",
+"C’è la fashion week ",
+"Jan qua ha fatto un corso (l’ha fatto anche marci)",
+"Torta non riesce a fumare le paglie, solo sigari",
+"Qua c’è Thommy Hilfigher - Eros",
+"Mimmo il weekend dell’esame di biochimica è andato a Catania con Papozzo - Fra",
+"In piazza della stazione a messina c’è un concerto - Livio",
+"Ho venduto l’SR - Eros",
+"Eros ha paura dell’aereo",
+"È finito muschio selvaggio",
+"Però è una GRANDE lavoratrice - Io",
+"È una mancanza di rispetto - Samu",
+"Notiziona delle 22:25, Graziano si è lasciato - Frapapone ",
+"Mary è andata al concerto di Lorenzo Fragola e anche a 3 firmacopie ",
+"L’orario d’entrata di domani ",
+"È il compleanno di Vittoria (la figlia di Fedez) - Mary",
+"Non ho messo a posto l’apparecchio all’ines",
+"Eros deve tornare mercoledì per un impegno, paccando milan-roma",
+"Federica si è mollata",
+"Il 9 luglio c’è Max Pezzali a Messina",
+"Giuliana va al concerto dei Pinguini Tattici Nucleari",
+"C’è la corsia preferenziale dei bus a Catania ",
+"Eros gli piace essere ignorante ",
+"Questo tempo è il mio preferito - Eros",
+"La media del cazzo in sicilia è la più alta d’italia (questo è un factos) - Samu Samu",
+"Non ho una lista - Samu Samu",
+"A Magnacce ha perso le scarpe Gesù",
+"El Matador ha pagato casa a Ibizi, ci va con il Rosso e il Fubbe - Uoffa",
+"Hanno arrestato lo stalker di Angelina Mango - Vittorietti",
+"Stasera c’è la Posta - Fanto",
+"La bonzani è vestita male - Jannuz",
+"La Doris è l’incantatrice",
+"Io raga no ho tanta fame - Doris",
+"Due mesi che non fumo una paglia - Jan",
+"Mi ha copiato l’outfit - Sami Sami",
+"A samu hanno rotto il cazzo degli americani",
+"Nuovo podcast di non so chi e parlano di taylor swift ",
+"La giada ha mangiato il sushi",
+"Marci viene al Colle solo di domenica",
+"Berretti ha preso 30 posizioni",
+"Samu non beve mantre mangia",
+"Federica non è d’accordo a dare le sbobine",
+"Rhove ha fatto i soldi con Shakerando",
+"Vado molto fiero delle mie ciglia - Samu",
+"Questo panino spacca - Rubi",
+"I culones sono buoni - Giada",
+"È tutto buio - Camilla",
+"La giadi non ha pagato",
+"Wissal ha beccato De Vrij",
+"Qua ci abita pietro cattaneo - Sami",
+"Cardi b ha chiesto il divorzio a offsett dopo che l’ha tradita - Sami",
+"Mi è caduta la paglia giù - Feddy",
+"La torta la mangio 🐳 - Sami",
+"Mi sono fatta il bagno nell’autan - Dora",
+"L’ombelico è il posto più sporco del corpo - Chiara",
+"Ho su le lenti - Ines",
+"Abbiamo beccato gli sbirri - Giadi",
+"Vitto",
+"Mi si è scaricata l’iqos - Scottata",
+"Ho freddo - Nina",
+"Samu è a vedere la Juve al Bar André",
+"L’ho presa da H&M uomo - Inni",
+"Si sente un bordello da fuori - Federica",
+"Tutto sto discorso sul casino al policlinico",
+"È forte a padel (fidati) - Zelo",
+"Droppa Golden Goose x 545 - Martino",
+"Mighi è andato al Conad",
+"Sono usciti i Big di San Remo",
+"Sono i Luna Pop - Lindi",
+"Voglio da dio imparare a fare il pane - Franci",
+"Sabato devo andare dal barbiere (Davide Greco) - Tony",
+"La nuova stagione dei Cesaroni",
+"C’era l’ultimo episodio di stasera tutto è possibile - Mary",
+"Devo guidare - Mary",
+"Questa rossa è molto leggera - Pech",
+"Sto uscendo - Er Papozzo",
+"Ho la doppia cittadinanza (PSG MERDE) - Doris",
+"La Franci va a gestire un party con la Nargi (quella che sta con Matri)",
+"Fino al 3 luglio Mary c’è, dopo no",
+"Sono e meno 5 - Papone Fra",
+"Qua ci sono le mie cose - Gloria",
+"Sono stato concepito prima dell’11 settembre 2001 - Semi il Magreb",
+"La martina ha rifatto il letto",
+"C’è Too Hot To Handle Italia - Chiara",
+"L’avrei già finita - Martina ",
+"Voglio fare il trend di Travis Scott (era Kanye) - Luca G",
+"Andiamo a cena per il compleanno della Chiara Loreni - Piro",
+"Non boffo più (stasera volevo)- Marti"
+        ];
+
+        let isGenerating = false;
+
+        function generatePhrase() {
+            if (isGenerating) return;
+            
+            isGenerating = true;
+            const button = document.getElementById('generateBtn');
+            const phraseDisplay = document.getElementById('phraseDisplay');
+            
+            // Show loading state
+            button.innerHTML = '<span class="loading"></span>Generando...';
+            button.disabled = true;
+            
+            // Hide current phrase
+            phraseDisplay.classList.remove('show');
+            
+            setTimeout(() => {
+                // Get random phrase
+                const randomIndex = Math.floor(Math.random() * phrases.length);
+                const randomPhrase = phrases[randomIndex];
+                
+                // Update phrase display
+                phraseDisplay.textContent = randomPhrase;
+                phraseDisplay.classList.add('show');
+                
+                // Reset button
+                button.innerHTML = 'Genera Frase';
+                button.disabled = false;
+                isGenerating = false;
+            }, 1000);
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add touch feedback for mobile
+            const button = document.getElementById('generateBtn');
+            
+            button.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            button.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+            });
+            
+            // Prevent scrolling on mobile
+            document.body.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Show initial phrase after a short delay
+            setTimeout(() => {
+                document.getElementById('phraseDisplay').classList.add('show');
+            }, 500);
+        });
+
+        // Handle orientation changes
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
